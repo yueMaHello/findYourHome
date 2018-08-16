@@ -1,4 +1,4 @@
-# General Heatmap
+# Find Your Home
 This is a Nodejs web application using Arcgis Javascript API. It is a simple tool which can be modified to display any zone-to-zone matrix.
 ## Set Up:
 #### From Github:
