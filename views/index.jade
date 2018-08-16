@@ -1,0 +1,65 @@
+//- include main.html
+extends layout
+
+block content
+
+    h1= title
+    //- label(class="switch")
+    //-   input(type="checkbox" id = "interact")
+      //- span(class="slider")
+  
+    //selectionPanel
+    div(class='row')
+      div(class='column' id='householdColumn')
+        h2 Household
+        div
+          h4 How many people are in your home?
+          input(type = 'text' id= 'peopleNumber') 
+        div
+          h4 How many employees are in your home?
+          input(type = 'text' id= 'workerNumber') 
+        div
+          h4 How many students are in your home?
+          input(type = 'text' id= 'studentNumber') 
+        div
+          h4 What kind of house do you prefer?
+          select(id = 'houseType' autocomplete="off")
+            //option(value=" ") Select a job typ
+            option(value = 'any' selected) Any
+            option(value = "singleHouse") Single House
+            option(value = "halfDuplex") Half Duplex
+            option(value = "condo") Condo or Appartment 
+        div
+          h4 Please provide price range of the house:
+            div
+              br
+              label(for='min-price') Min:C$
+              input(type='text' id='min-price')
+              br
+              label(for='max-price') Max:C$
+              input(type='text' id='max-price') 
+        input(type = 'button' id = 'submitHouseholdInfo' value = 'submit')
+  
+      div(class='column' id='personColumn' style="display:none")
+        h2 Personal Information
+        div(id = 'personInfo')
+        input(type = 'button' id = 'submitPersonalInfo' style="margin-top:50px;" value = 'submit')
+ 
+      div(class='column columnMedium' id = 'placeColumn' style="display:none")
+        h2 Occupation Addresses
+        div(id = 'workplace')
+        input(type = 'button' id = 'submitWorkpalce' style="margin-top:50px;" value = 'submit')
+
+      div(class="column columnLargest")
+        //- div(id="legendDiv")
+        //- div(id="viewDiv")
+        div(id='map')  
+        //- div(class='legendClass' id = 'dynamicLegend')
+      
+    
+    script.
+      console.log($('#map').attr('id'))
+      //pass data to frontend from backend
+      var title = !{JSON.stringify(title)};
+    script(src="/javascripts/person.js")
+    script(src="/javascripts/selectionPanel.js")
