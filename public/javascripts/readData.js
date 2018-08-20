@@ -61,10 +61,5 @@ function buildMatrixLookup(arr) {
 
   return lookup;
 }
-function stringToUintArray(message) {
-  var encoded = self.btoa(message);
-  var uintArray = Array.prototype.slice.call(encoded).map(ch => ch.charCodeAt(0));
-  var uarray = new Uint8Array(uintArray);
-  return uarray;
-}
+
 loadData();

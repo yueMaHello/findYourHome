@@ -38,9 +38,7 @@ var csvData = {
  
   var monitorDataStatus = new Variable(0,function(){
     $('#wait').hide();
-    if(submitTime!==0){
-      $('#submitWorkpalce').click();}
-  })
+  });
   var w;
   if(window.Worker){
     $('#wait').show();
@@ -87,13 +85,10 @@ else{
 
 
 function finishReadingWithoutWorker(error,auto,transit,walk){
-
   csvData.auto.dataMatrix=buildMatrixLookup(auto);
   csvData.transit.dataMatrix=buildMatrixLookup(transit);
   csvData.walk.dataMatrix=buildMatrixLookup(walk);
   $("#wait").hide();
-
-
 }
 
 require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geometry/Polyline",
@@ -478,29 +473,15 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
           $('#morningTravelTime').append('<p style="text-align:left; margin-left:20%">Daily Travel Time: '+2*personList[p].travelResult[1].toFixed(2)+' mins</p>');
 
           
-          
-        }
-        
-        
+        }  
       }
-      
-    
-    
     }
-    
-    
-    
-
-    
     
 });
 
 // }
 function keySortObject(object){
-  
-  return Object.keys(object).sort(function(a,b){return object[a]-object[b]})
-  
-  
+  return Object.keys(object).sort(function(a,b){return object[a]-object[b]});
 }
 //convert csv array into good format(zone-to-zone).
 function buildMatrixLookup(arr) {    

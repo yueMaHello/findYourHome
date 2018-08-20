@@ -1,16 +1,11 @@
-var i = 0;
+
 importScripts('https://d3js.org/d3.v4.min.js');
+var autoDirectory="../data/SOV_AUTO_Time_AM_Cr_mf1.csv";
 
-
-var auto={
-    directory:"../data/SOV_AUTO_Time_AM_Cr_mf1.csv",
-    dataMatrix:null,
-    type:'auto'
-  }
 
 function loadData() {
     var q = d3.queue();
-        q.defer(d3.csv,auto.directory)
+        q.defer(d3.csv,autoDirectory)
           .await(finishReading);
 }
 function finishReading(error,auto){
@@ -32,11 +27,5 @@ function buildMatrixLookup(arr) {
   }
 
   return lookup;
-}
-function stringToUintArray(message) {
-  var encoded = self.btoa(message);
-  var uintArray = Array.prototype.slice.call(encoded).map(ch => ch.charCodeAt(0));
-  var uarray = new Uint8Array(uintArray);
-  return uarray;
 }
 loadData();
