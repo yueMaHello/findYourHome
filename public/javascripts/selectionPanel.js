@@ -14,45 +14,87 @@ var householdInfo = {
 };
 var connections = [];
 var csvData = {
-  distance:{
-    directory:"../data/Distance_mf2.csv",
-    dataMatrix:null
-    
-  },
+  // distance:{
+  //   directory:"../data/Distance_mf2.csv",
+  //   dataMatrix:null,
+  //   type:'distance'
+  // },
   auto:{
     directory:"../data/SOV_AUTO_Time_AM_Cr_mf1.csv",
-    dataMatrix:null  
+    dataMatrix:null,
+    type:'auto'
   },
   transit:{
     directory:"../data/Transit_Total_Time_AM.csv",
-    dataMatrix:null
-    
+    dataMatrix:null,
+    type:'transit'
   },
   walk:{
     directory:"../data/Walk_Time_AM_Cr_mf486.csv",
-    dataMatrix:null
-    
+    dataMatrix:null,
+    type:'walk'
   }
 };
  
-var monitorDataStatus = new Variable(0,function(){
-  $('#wait').show();
-})
-var w;
-if(window.Worker){
-   w = new Worker("./javascripts/readData.js");
-   w.onmessage = function(e){
-     csvData = JSON.parse(e.data);
-     $('#wait').hide();
+  var monitorDataStatus = new Variable(0,function(){
+    $('#wait').hide();
     if(submitTime!==0){
-      $('#submitWorkpalce').click();
-    }
-     w.terminate();
+      $('#submitWorkpalce').click();}
+  })
+  var w;
+  if(window.Worker){
+    $('#wait').show();
+    //  w = new Worker("./javascripts/readData.js");
+    //  w.onmessage = function(e){
+    //    csvData = JSON.parse(e.data);
+    //    $('#wait').hide();
+    //   if(submitTime!==0){
+    //     $('#submitWorkpalce').click();
+    //   }
+    //   w.terminate();
+    // };
     
-   }
+    w1 = new Worker("./javascripts/readAuto.js");
+    w1.onmessage = function(e){
+      csvData.auto.dataMatrix = JSON.parse(e.data);
+      w1.terminate();
+      monitorDataStatus.SetValue(monitorDataStatus.GetValue()+1);
+   };
+   w2 = new Worker("./javascripts/readTransit.js");
+   w2.onmessage = function(e){
+     csvData.transit.dataMatrix = JSON.parse(e.data);
+     w2.terminate();
+     monitorDataStatus.SetValue(monitorDataStatus.GetValue()+1);
+
+  };
+  w3 = new Worker("./javascripts/readWalk.js");
+  w3.onmessage = function(e){
+    csvData.walk.dataMatrix= JSON.parse(e.data);
+    w3.terminate();
+    monitorDataStatus.SetValue(monitorDataStatus.GetValue()+1);
+  };
+
+}
+else{
+  //bad browser which doesn't support a seperate worker/thread
+  $("#wait").show();
+  var q = d3.queue();
+  q.defer(d3.csv,csvData.auto.directory)
+      .defer(d3.csv,csvData.transit.directory)
+        .defer(d3.csv,csvData.walk.directory)
+        .await(finishReadingWithoutWorker);
 }
 
 
+function finishReadingWithoutWorker(error,auto,transit,walk){
+
+  csvData.auto.dataMatrix=buildMatrixLookup(auto);
+  csvData.transit.dataMatrix=buildMatrixLookup(transit);
+  csvData.walk.dataMatrix=buildMatrixLookup(walk);
+  $("#wait").hide();
+
+
+}
 
 require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geometry/Polyline",
   "esri/geometry/Extent","esri/tasks/query","esri/dijit/Popup",
@@ -98,23 +140,14 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       );
       var graphic = new Graphic(point, symbol);
       map.graphics.add(graphic);
-      // 
-      // console.log(point)
-      // console.log(travelZoneLayer._graphicsVal)
+
       var found= false;
       for(var c in travelZoneLayer._graphicsVal){
-        // console.log(travelZoneLayer._graphicsVal[c])
         if(travelZoneLayer._graphicsVal[c].geometry.contains(point)){
-          // console.log(travelZoneLayer._graphicsVal[c].attributes.TAZ_New)
           personList[activeWorkerOrStudent].address = [travelZoneLayer._graphicsVal[c].attributes.TAZ_New,point];
-          // $('#checkTrue_'+activeWorkerOrStudent).css('visibility','visible');
           found = true;
-
           break;
         }
-        // else {
-        //   console.log(travelZoneLayer._graphicsVal[c].attributes.TAZ_New)
-        // }
       }
 
     }
@@ -170,7 +203,6 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
         }   
     });
     function fillPersonalInfoPanel(){
-        console.log(householdInfo.totalMembers)
         for(var i=0;i<householdInfo.totalMembers;i++){
           var divId = i+'personInfo';
           // var divNameId = i+'personName';
@@ -179,11 +211,11 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
           var divOccupId = i+'personOccup';
     
           $('#personInfo').append('<div style="text-align:right; margin-right:40%" id="'+divId+'" ></div>');
-          $('#'+divId).append('<h4 style="text-align:left; margin-left:20px">'+numberList[i]+' person:<h4>')
+          $('#'+divId).append('<h4 style="text-align:left; margin-left:20px">'+numberList[i]+' person:<h4>');
           // $('#'+divId).append('<label for="'+divNameId+'">Name:</label>');
           // $('#'+divId).append('<input style="width:150px" type="text" id="'+divNameId+'">');
           $('#'+divId).append('<label for="'+divAgeId+'">Age:</label>');
-          $('#'+divId).append('<input type="range" min="1" max="120" value="50" class="slider" style="width:150px" type="text" id="'+divAgeId+'"><p style="position:absolute;margin-top:-20px; margin-left:290px;"><span id="'+divAgeValue+'"></span></p>');
+          $('#'+divId).append('<input type="range" min="1" max="120" value="50" class="slider" style="width:150px" type="text" id="'+divAgeId+'"><p style="margin-top:-20px; margin-left:290px;"><span id="'+divAgeValue+'"></span></p>');
           $('#'+divId).append('<br><label for="'+divOccupId+'">Occupation:</label>');
           $('#'+divId).append('<select style="width:150px" autocomplete="off" id="'+divOccupId+'"></select>');
           $('#'+divOccupId).append('<option value="other" selected>Other</option>');
@@ -193,11 +225,11 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
           var slider = document.getElementById(divAgeId);
           var output = document.getElementById(divAgeValue);
           output.innerHTML = slider.value;
-          slider.oninput = function() {
+          slider.oninput = function(){
             var activeSlider = this.id.split('person')[0];
             var outputId = activeSlider+'personAgeValue';
             document.getElementById(outputId).innerHTML = this.value;
-          }
+          };
         }
         personList = new Array(householdInfo.totalMembers);
         for(var l=0; l<householdInfo.totalMembers;l++){
@@ -211,12 +243,13 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
             var divOccupId = i+'personOccup';
             // personList[i].name = ($('#'+divNameId).val());
             personList[i].age = ($('#'+divAgeId).val());
+            console.log(personList[i].age);
             personList[i].occupation =($('#'+divOccupId).val());
           }
           $('#personColumn').hide();
           $('#placeColumn').show();
           fillPlacePanel();
-        })
+        });
     }
     function fillPlacePanel(){
        for(var i=0;i<personList.length;i++){
@@ -227,8 +260,8 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
               var divMapButtonDisable = i+'workerAddressMapDisable';
               var divTravelMethod = i+'workerTravelMethod';
               $('#workplace').append('<div style="text-align:left; margin-left:20px;" id="'+divId+'" ></div>');
-              $('#'+divId).append("<h4 style='text-align:left'>"+numberList[i]+" person:<h4>")
-              $('#'+divId).append("<p>Occupation Address:</p>")
+              $('#'+divId).append("<h4 style='text-align:left'>"+numberList[i]+" person:<h4>");
+              $('#'+divId).append("<p>Occupation Address:</p>");
               $('#'+divId).append('<div style="position:absolute;margin-left:140px;margin-top:-35px;text-align:left;"><div type="text" id = "'+divGeocoder+'"><button style="cursor: pointer;text-align:left;position:absolute;margin-left:230px;margin-top:-25px;border-style:solid;border-size:1px;" id = "'+divMapButton+'">Or&nbspchoose&nbspon&nbspmap</button></div></div>');
               $('#'+divId).append('<button style="position:absolute;margin-left:140px;margin-top:-35px;display:none; cursor: pointer;border-style:solid;border-size:1px;" id = "'+divMapButtonDisable+'">Or input the address</button>');
               $('#'+divId).append('<label for="'+divTravelMethod+'">Ideal Travel Method:&nbsp</label>');
@@ -276,11 +309,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
                 var activeDivMapButtonDisable = activeWorkerOrStudent+'workerAddressMapDisable';
                 $('#'+activeDivGeocoder).show();
                 $('#'+activeDivMapButtonDisable).hide();
-              })
-            
-
-
-            
+              });
           }
        }
     }
@@ -306,14 +335,12 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
           map.graphics.add(graphic); 
         }
       }
-      analyzeTheBestHome()
+      analyzeTheBestHome();
+      $('#placeColumn').hide();
+      $('#resultColumn').show();
     });
     function analyzeTheBestHome(){
-  
-      if(csvData.auto.dataMatrix===null){
-        monitorDataStatus.SetValue(1);
-        return;
-      }
+
       var allZones = Object.keys(csvData.auto.dataMatrix);
       //console.log(allZones);
       var timeResult={};
@@ -358,7 +385,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
               else{
                 var dataArray = csvData[personList[j].travelMethod].dataMatrix[allZones[i]];
                 if(dataArray){
-                  timeResult[allZones[i]]+=dataArray[personList[j].address[0]]
+                  timeResult[allZones[i]]+=dataArray[personList[j].address[0]];
 
                 }
                 else{
@@ -370,7 +397,10 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
         }  
       }
       timeResult = keySortObject(timeResult);
-      brushLayer(timeResult)
+      brushLayer(timeResult);
+      showResult();
+      
+
     }
     function brushLayer(timeResult){
       var renderer = new ClassBreaksRenderer(symbol, function(feature){
@@ -385,9 +415,9 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       // renderer.addBreak(10, 50, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([	249, 238, 237,0.90])));
       renderer.addBreak(10, 50, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([243, 224, 219,0.90])));
       // renderer.addBreak(100, sort[4*chunkZones], new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([237, 214, 202,0.90])));
-      renderer.addBreak( 50, 150, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([225, 200, 170,0.90])));
+      renderer.addBreak(50, 150, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([225, 200, 170,0.90])));
       // renderer.addBreak( sort[5*chunkZones],  sort[6*chunkZones], new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([213, 196, 141,0.90])));
-      renderer.addBreak( 150,250, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([207, 197, 127,0.90])));
+      renderer.addBreak(150,250, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([207, 197, 127,0.90])));
       // renderer.addBreak(150,250, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([201, 199, 113,0.90])));
       renderer.addBreak(250,350, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([185, 195, 101,0.90])));
       // renderer.addBreak(sort[9*chunkZones], sort[10*chunkZones], new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([168, 189, 88,0.90])));
@@ -402,7 +432,66 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       renderer.addBreak(1000, Infinity, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([5, 80, 15,0.90])));
       travelZoneLayer.setRenderer(renderer);
       travelZoneLayer.redraw();    
+      var infoTemplate = new InfoTemplate();
+      // infoTemplate.setTitle('Travel Time Result');
+      // // infoTemplate.setContent('<p>'+numberList[i]+' person address.')
+      // 
+      // var infoTemplate = generateInfoTemplate();
+      
+      travelZoneLayer.setInfoTemplate(infoTemplate);
     }
+    function showResult(){
+      connections.push(dojo.connect(travelZoneLayer,'onClick', selectZoneHandler))
+      function selectZoneHandler(evt){
+        $('#morningTravelTime').empty();
+        var clickedZone = evt.graphic.attributes.TAZ_New;
+        for(var i=0;i<personList.length;i++){
+          if(personList[i].address===null){
+            continue;
+          }
+          var personZone = personList[i].address[0];
+          var personMethod = personList[i].travelMethod;
+          if( personMethod==='any'){
+            var bestMethod;
+            var shortestTime=Infinity;
+            for(var j in csvData){
+                if(csvData[j].dataMatrix[clickedZone][personZone]<shortestTime){
+                  shortestTime = csvData[j].dataMatrix[clickedZone][personZone];
+                  bestMethod = csvData[j].type;
+                }
+            }
+            personList[i].travelResult = [bestMethod,shortestTime];
+          }
+          else{
+            
+            personList[i].travelResult  = [personMethod,csvData[personMethod].dataMatrix[clickedZone][personZone]];
+          }
+        }
+        
+        for(var p=0;p<personList.length;p++){
+
+          if(personList[p].travelResult===null){
+            continue;
+          }
+          $('#morningTravelTime').append('<h4 style="text-align:left; margin-left:25px">'+numberList[p]+' person: </h4>')
+          $('#morningTravelTime').append('<p style="text-align:left; margin-left:20%">Travel Method: '+personList[p].travelResult[0]+'</p>');
+          $('#morningTravelTime').append('<p style="text-align:left; margin-left:20%">Daily Travel Time: '+2*personList[p].travelResult[1].toFixed(2)+' mins</p>');
+
+          
+          
+        }
+        
+        
+      }
+      
+    
+    
+    }
+    
+    
+    
+
+    
     
 });
 
@@ -451,5 +540,8 @@ function Variable(initVal, onChange)
     //This method changes the value and calls the given handler
     this.SetValue = function(value){
         this.val = value;
-        this.onChange();};
+        if(value === 3){
+            this.onChange();
+        }
+      };
 }

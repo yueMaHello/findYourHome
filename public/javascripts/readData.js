@@ -1,43 +1,46 @@
 var i = 0;
 importScripts('https://d3js.org/d3.v4.min.js');
 var csvData = {
-  distance:{
-    directory:"../data/Distance_mf2.csv",
-    dataMatrix:null
-    
-  },
+  // distance:{
+  //   directory:"../data/Distance_mf2.csv",
+  //   dataMatrix:null,
+  //   type:'distance'
+  // },
   auto:{
     directory:"../data/SOV_AUTO_Time_AM_Cr_mf1.csv",
-    dataMatrix:null  
+    dataMatrix:null,
+    type:'auto'
   },
   transit:{
     directory:"../data/Transit_Total_Time_AM.csv",
-    dataMatrix:null
-    
+    dataMatrix:null,
+    type:'transit'
   },
   walk:{
     directory:"../data/Walk_Time_AM_Cr_mf486.csv",
-    dataMatrix:null
-    
+    dataMatrix:null,
+    type:'walk'
   }
 };
 function loadData() {
     var q = d3.queue();
-
-    q.defer(d3.csv,csvData.distance.directory)
-      .defer(d3.csv,csvData.auto.directory)
-        .defer(d3.csv,csvData.transit.directory)
-          .defer(d3.csv,csvData.walk.directory)
+    // 
+    // q.defer(d3.csv,csvData.distance.directory)
+    //   .defer(d3.csv,csvData.auto.directory)
+    //     .defer(d3.csv,csvData.transit.directory)
+    //       .defer(d3.csv,csvData.walk.directory)
+    //       .await(finishReading);
+    q.defer(d3.csv,csvData.auto.directory)
+      .defer(d3.csv,csvData.transit.directory)
+        .defer(d3.csv,csvData.walk.directory)
           .await(finishReading);
 }
-function finishReading(error,distance,auto,transit,walk){
-  
-  csvData.distance.dataMatrix=buildMatrixLookup(distance);
-  
+function finishReading(error,auto,transit,walk){
+
   csvData.auto.dataMatrix=buildMatrixLookup(auto);
   csvData.transit.dataMatrix=buildMatrixLookup(transit);
   csvData.walk.dataMatrix=buildMatrixLookup(walk);
-  
+
 
   postMessage(JSON.stringify(csvData));
   

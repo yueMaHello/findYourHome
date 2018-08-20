@@ -4,5 +4,6 @@ function person(index){
   this.occupation = null;
   this.address = null;
   this.travelMethod = null;
+  this.travelResult= null;
   
 }
