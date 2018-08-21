@@ -1,6 +1,7 @@
 var submitTime = 0;
 var map;
 var personList;
+var restartTime=0;
 var numberList = ['First','Second','Third','Fourth','Fifth','Sixth','Seventh','Eighth','Ninth','Tenth'];
 var householdInfo = {
   totalMembers:null,
@@ -148,7 +149,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
     }
 
      
-    $('#submitHouseholdInfo').on('click',function(){
+    $('#submitHouseholdInfo').unbind('click').bind('click', function (e){
       //fill household
         $('#personInfo').empty();
         var check = true;
@@ -230,8 +231,10 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
         for(var l=0; l<householdInfo.totalMembers;l++){
           personList[l] = new person(l);
         }
-        $('#submitPersonalInfo').on('click',function(){
+        $('#submitPersonalInfo').unbind('click').bind('click', function (e){
           $('#workplace').empty();
+          console.log('clickPersonalSubmit')
+
           for(var i=0;i<householdInfo.totalMembers;i++){
             // var divNameId = i+'personName';
             var divAgeId = i+'personAge';
@@ -247,13 +250,18 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
         });
     }
     function fillPlacePanel(){
+  
+
        for(var i=0;i<personList.length;i++){
           if(personList[i].occupation!=='other'){
               var divId = i+'workInfo';
-              var divGeocoder = i+'workerAddressGeocoder';
+              var divGeocoder = i+'_'+restartTime+'workerAddressGeocoder';
+              console.log(divGeocoder)
+
               var divMapButton = i+'workerAddressMap';
               var divMapButtonDisable = i+'workerAddressMapDisable';
               var divTravelMethod = i+'workerTravelMethod';
+              console.log($('#workplace'))
               $('#workplace').append('<div style="text-align:left; margin-left:20px;" id="'+divId+'" ></div>');
               $('#'+divId).append("<h4 style='text-align:left'>"+numberList[i]+" person:<h4>");
               $('#'+divId).append("<p>Occupation Address:</p>");
@@ -273,9 +281,9 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
                 map: map
               }, dom.byId(divGeocoder));  
               geocoder.on("select", showLocation);
-              $('#'+divMapButton).on('click',function(){
+              $('#'+divMapButton).unbind('click').bind('click', function (e){
                 activeWorkerOrStudent =Number(this.id.split('worker')[0]);
-                var activeDivGeocoder = activeWorkerOrStudent+'workerAddressGeocoder';
+                var activeDivGeocoder = activeWorkerOrStudent+'_'+restartTime+'workerAddressGeocoder';
                 var activeDivMapButtonDisable = activeWorkerOrStudent+'workerAddressMapDisable';
                 $('#'+activeDivGeocoder).hide();
                 $('#'+activeDivMapButtonDisable).show();
@@ -298,9 +306,9 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
 
               })
 
-              $("#"+divMapButtonDisable).on('click',function(){
+              $("#"+divMapButtonDisable).unbind('click').bind('click', function (e){
                 activeWorkerOrStudent =Number(this.id.split('worker')[0]);
-                var activeDivGeocoder = activeWorkerOrStudent+'workerAddressGeocoder';
+                var activeDivGeocoder =  activeWorkerOrStudent+'_'+restartTime+'workerAddressGeocoder'+restartTime;
                 var activeDivMapButtonDisable = activeWorkerOrStudent+'workerAddressMapDisable';
                 $('#'+activeDivGeocoder).show();
                 $('#'+activeDivMapButtonDisable).hide();
@@ -308,7 +316,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
           }
        }
     }
-    $('#submitWorkpalce').on('click',function(){
+    $('#submitWorkpalce').unbind('click').bind('click', function (e){
       submitTime+=1;
       dojo.forEach(connections,dojo.disconnect);
       map.graphics.clear();
@@ -436,7 +444,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       travelZoneLayer.setInfoTemplate(infoTemplate);
     }
     function showResult(){
-      connections.push(dojo.connect(travelZoneLayer,'onClick', selectZoneHandler))
+      connections.push(dojo.connect(travelZoneLayer,'onClick', selectZoneHandler));
       function selectZoneHandler(evt){
         $('#morningTravelTime').empty();
         var clickedZone = evt.graphic.attributes.TAZ_New;
@@ -476,6 +484,19 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
         }  
       }
     }
+    $('#submitRestart').unbind('click').bind('click', function (e){
+      restartTime=1+restartTime;
+      $('#resultColumn').hide();
+      $('#householdColumn').show();
+      $('#personInfo').empty();
+      $('#workplace').empty();
+      $('morningTravelTime').empty();
+      personList = null;
+      dojo.forEach(connections,dojo.disconnect);
+      travelZoneLayer.setInfoTemplate(false)
+      
+      
+    });
     
 });
 
