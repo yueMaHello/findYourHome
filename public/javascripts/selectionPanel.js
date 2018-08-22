@@ -490,7 +490,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       $('#householdColumn').show();
       $('#personInfo').empty();
       $('#workplace').empty();
-      $('morningTravelTime').empty();
+      $('#morningTravelTime').empty();
       personList = null;
       dojo.forEach(connections,dojo.disconnect);
       travelZoneLayer.setInfoTemplate(false)
