@@ -11,7 +11,7 @@ This is a Nodejs web application using Arcgis Javascript API. It will display a 
 6. Type 'npm intall express --save'
 7. Type 'npm install http-errors --save'
 8. Put your csv data into './public/data' folder. The data should be a zone-to-zone matrix. 
-10. The data must have the same format as the example data located in './public/dataExample/Auto Time.csv'.
+10. The data must have the same format as the example data located in './public/dataExample/SOV_AUTO_Time_AM_Cr_mf1.csv'.
 
 #### From Lab Computer I
 1. Browse to the root of the folder
