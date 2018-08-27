@@ -6,7 +6,7 @@ This is a Nodejs web application using Arcgis Javascript API. It will display a 
 1. If you haven't downloaded Nodejs on your computer, you need to download it and add it into PATH.
 2. Download this folder
 3. Browse to the root of the folder
-4. Open the terminal/cmd and go to the root of the App './generalHeatmap'. 
+4. Open the terminal/cmd and go to the root of the App './findYourHome'. 
 5. Type 'npm install'
 6. Type 'npm intall express --save'
 7. Type 'npm install http-errors --save'
@@ -21,10 +21,10 @@ This is a Nodejs web application using Arcgis Javascript API. It will display a 
 ## Run
 1. Use terminal/cmd to go to the root of the App './findYourHome2'. 
 2. Type 'npm start'
-2. Browse 'http://localhost:3035'
+2. Browse 'http://localhost:3035' or 'http://162.106.202.155:3035'
 
 ## Use tips:
-#### Why there are several read***.csv file in './public/javascripts/' folder :
+#### Why there are several 'read***.js' scripts in './public/javascripts/' folder :
 1. To read these three csv files together may take a long time.
 2. The WebWorker is used to load each csv file in a seperate thread. 
 3. For example, readAuto.js is to read 'SOV_AUTO_TIME_AM_Cr_mf1.csv'
@@ -32,7 +32,7 @@ This is a Nodejs web application using Arcgis Javascript API. It will display a 
 
 #### If you want to update the TravelZoneLayer shape file:
  1. The map layer is not stored in localhost. It is stored in the arcgis online server.
- 2. In './public/javascript/selectionPanel.js', you can find the current travel zone layer: 'https://services8.arcgis.com/FCQ1UtL7vfUUEwH7/arcgis/rest/services/newestTAZ/FeatureServer/0?token=8gOmRemAl8guD3WA_rfLwe50SgsEvaZzIcXIraH9xC3NQPCLraLwcHIkz3osWU-SHUdSKO1N6rCnWDF_CzWLFlFFUCeugETS44f409SsCtX9eC-HoX0dkXZj2vQD1SsboTGNgAzLDtG-BfIv0FnlWBNqq84hC5a6e7lj2Tt1oV8V0WxGiCE7rtaXgxZr18TZur-l_T6gWW2jDh1mt5q0mqty8vc133DvOtg5JhtGm8OTdn9rYtscRKu66B153RYB'. If you want to change it to another layer, you can create you own arcgis online account and upload the layer to the arcgis server. You need to replace the url into a new one. You can also ask Sandeep to access Yue Ma's arcgis account.
+ 2. In './public/javascript/selectionPanel.js', you can find the current travel zone layer: 'https://services8.arcgis.com/FCQ1UtL7vfUUEwH7/arcgis/rest/services/newestTAZ/FeatureServer/0'. If you want to change it to another layer, you can create you own arcgis online account and upload the layer to the arcgis server. You need to replace the url into a new one. You can also ask Sandeep to access Yue Ma's arcgis account.
 
 #### Woops, the App can't run after changing a new dataset:
  1. You need to restart the server from terminal/cmd (Rerun 'npm start').
