@@ -35,4 +35,4 @@ This is a Nodejs web application using Arcgis Javascript API. It will display a 
  2. In './public/javascript/selectionPanel.js', you can find the current travel zone layer: 'https://services8.arcgis.com/FCQ1UtL7vfUUEwH7/arcgis/rest/services/newestTAZ/FeatureServer/0'. If you want to change it to another layer, you can create you own arcgis online account and upload the layer to the arcgis server. You need to replace the url into a new one. You can also ask Sandeep to access Yue Ma's arcgis account.
 
 #### Woops, the App can't run after changing a new dataset:
- 1. You need to restart the server from terminal/cmd (Rerun 'npm start').
+ 1. You need to restart the App server from terminal/cmd (Rerun 'npm start').
