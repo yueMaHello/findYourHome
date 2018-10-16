@@ -1,25 +1,45 @@
+/*
+When a family needs to move to a new city or wants to buy a new house, among thousands of houses, it is difficult to find which one is the most suitable.
+To decide a new accommodation’s location, several factors must take into account, such as daily travel time, house price, house type and so on.
+This app is an unfinished one, since it only takes travel time into account. We will add more elements into it to optimize the selection algorithm in the future.
+For now, the app can collect each family member’s diurnal locations and travel methods, then it will brush show a gravity map to intuitively tell people where is suitable to live.
+In the future, house price, house type and preferred location will be taken into account to make the app more usable.
+
+During my four months full time research job in my university when I was a second year student, I participated a control process fault detection project.
+I did literature reviews, tested chemical system model, built control system using Simulink, and wrote python code of Dynamic PCA. Though the work I did is not hard,
+
+
+ */
+
+//record the restart times
 var submitTime = 0;
 var map;
 var personList;
 var restartTime=0;
+//it is used to relate number to text
 var numberList = ['First','Second','Third','Fourth','Fifth','Sixth','Seventh','Eighth','Ninth','Tenth'];
 var householdInfo = {
   totalMembers:null,
   numOfWorkers:null,
   numOfStudents:null,
-  houseType:"Any",//Single house, Duplex, Condon,Appartment
+  houseType:"Any",//Single house, Duplex, Condo, Appartment
   housePriceRange:{
       min:0,
       max:Infinity
   }
 };
-var connections = [];
+var connections = [];//map clicking event
+function person(index){
+    this.index = index;
+    this.age = null;
+    this.occupation = null;
+    this.address = null;
+    this.travelMethod = null;
+    this.travelResult= null;
+}
+//an object stores all the csv data
+//if you change the csv files' names, you should also change csv names in readData.js
 var csvData = {
-  // distance:{
-  //   directory:"../data/Distance_mf2.csv",
-  //   dataMatrix:null,
-  //   type:'distance'
-  // },
   auto:{
     directory:"../data/SOV_AUTO_Time_AM_Cr_mf1.csv",
     dataMatrix:null,
@@ -36,43 +56,25 @@ var csvData = {
     type:'walk'
   }
 };
- 
+
+    //detect when the data has been loaded.
   var monitorDataStatus = new Variable(0,function(){
     $('#wait').hide();
   });
   var w;
+  //Use another thread to load all the data
   if(window.Worker){
     $('#wait').show();
-    //  w = new Worker("./javascripts/readData.js");
-    //  w.onmessage = function(e){
-    //    csvData = JSON.parse(e.data);
-    //    $('#wait').hide();
-    //   if(submitTime!==0){
-    //     $('#submitWorkpalce').click();
-    //   }
-    //   w.terminate();
-    // };
-    
-    w1 = new Worker("./javascripts/readAuto.js");
-    w1.onmessage = function(e){
-      csvData.auto.dataMatrix = JSON.parse(e.data);
-      w1.terminate();
-      monitorDataStatus.SetValue(monitorDataStatus.GetValue()+1);
-   };
-   w2 = new Worker("./javascripts/readTransit.js");
-   w2.onmessage = function(e){
-     csvData.transit.dataMatrix = JSON.parse(e.data);
-     w2.terminate();
+     w = new Worker("./javascripts/readData.js");
+     w.onmessage = function(e){
+       csvData = JSON.parse(e.data);
+       $('#wait').hide();
+      if(submitTime!==0){
+        $('#submitWorkpalce').click();
+      }
+      w.terminate();
+    };
      monitorDataStatus.SetValue(monitorDataStatus.GetValue()+1);
-
-  };
-  w3 = new Worker("./javascripts/readWalk.js");
-  w3.onmessage = function(e){
-    csvData.walk.dataMatrix= JSON.parse(e.data);
-    w3.terminate();
-    monitorDataStatus.SetValue(monitorDataStatus.GetValue()+1);
-  };
-
 }
 else{
   //bad browser which doesn't support a seperate worker/thread
@@ -83,8 +85,7 @@ else{
         .defer(d3.csv,csvData.walk.directory)
         .await(finishReadingWithoutWorker);
 }
-
-
+//run everything in the main thread
 function finishReadingWithoutWorker(error,auto,transit,walk){
   csvData.auto.dataMatrix=buildMatrixLookup(auto);
   csvData.transit.dataMatrix=buildMatrixLookup(transit);
@@ -109,14 +110,14 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
         minZoom:6,
         slider: false
     });
-    
-    var travelZoneLayer = new FeatureLayer("https://services8.arcgis.com/FCQ1UtL7vfUUEwH7/arcgis/rest/services/newestTAZ/FeatureServer/0?token=8gOmRemAl8guD3WA_rfLwe50SgsEvaZzIcXIraH9xC3NQPCLraLwcHIkz3osWU-SHUdSKO1N6rCnWDF_CzWLFlFFUCeugETS44f409SsCtX9eC-HoX0dkXZj2vQD1SsboTGNgAzLDtG-BfIv0FnlWBNqq84hC5a6e7lj2Tt1oV8V0WxGiCE7rtaXgxZr18TZur-l_T6gWW2jDh1mt5q0mqty8vc133DvOtg5JhtGm8OTdn9rYtscRKu66B153RYB",{
+    //travel zone layer
+    var travelZoneLayer = new FeatureLayer("https://services8.arcgis.com/FCQ1UtL7vfUUEwH7/arcgis/rest/services/newestTAZ/FeatureServer/0",{
         mode: FeatureLayer.MODE_SNAPSHOT,
         outFields: ["*"],
-        // infoTemplate: template
+
     });
     //LRT layer
-    var lrtFeatureLayer = new FeatureLayer("https://services8.arcgis.com/FCQ1UtL7vfUUEwH7/arcgis/rest/services/LRT/FeatureServer/0?token=fq-1SwmcgAepCE9kB7p1ySJqJl4Tj4PVlZ1Bcbso2r9RBv1BCdET4mcpDLteGYoyOFSkDrwBRilzkmzMzr5KyZKLhqCULVNivn-LyH2WXxPESB1NRpyXQZz9NiNEdGGXdB3zQM1cH17XBTu8-keOmeUMh0UaJQ7VGweheUREf9wPsPdThCFpIwfFZ-ZrKuatP4JDGf8qZLZUQpYii04YFz_Po6MOQmuWcKAVMbFYIWIQTiSXgGJRiXA0BUpzOio3",{
+    var lrtFeatureLayer = new FeatureLayer("https://services8.arcgis.com/FCQ1UtL7vfUUEwH7/arcgis/rest/services/LRT/FeatureServer/0",{
         mode: FeatureLayer.MODE_SNAPSHOT,
         outFields: ["*"],
     });
@@ -125,30 +126,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
         map.addLayer(travelZoneLayer);
         map.addLayer(lrtFeatureLayer);
     });
-    
-    function showLocation(evt) {
-      activeWorkerOrStudent = Number(evt.target.id.split('worker')[0]);
-      map.graphics.clear();
-      var point = evt.result.feature.geometry;
-      var symbol = new SimpleMarkerSymbol().setStyle(
-        SimpleMarkerSymbol.STYLE_SQUARE).setColor(
-        new Color([255,0,0,0.5])
-      );
-      var graphic = new Graphic(point, symbol);
-      map.graphics.add(graphic);
-
-      var found= false;
-      for(var c in travelZoneLayer._graphicsVal){
-        if(travelZoneLayer._graphicsVal[c].geometry.contains(point)){
-          personList[activeWorkerOrStudent].address = [travelZoneLayer._graphicsVal[c].attributes.TAZ_New,point];
-          found = true;
-          break;
-        }
-      }
-
-    }
-
-     
+    //first submit button
     $('#submitHouseholdInfo').unbind('click').bind('click', function (e){
       //fill household
         $('#personInfo').empty();
@@ -191,25 +169,25 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
         }
         else{
           $('#studentNumber').css('border-color','green');
-        } 
+        }
+        //if all the data has desired format.
         if(check){
           $("#householdColumn").hide();
           $('#personColumn').show();
           fillPersonalInfoPanel();
         }   
     });
+    //generate personal info panel based on the household info
+    //for example, if there are three people in your home, then there will be three groups shown in this section
     function fillPersonalInfoPanel(){
         for(var i=0;i<householdInfo.totalMembers;i++){
           var divId = i+'personInfo';
-          // var divNameId = i+'personName';
           var divAgeId = i+'personAge';
           var divAgeValue = i+'personAgeValue';
           var divOccupId = i+'personOccup';
     
           $('#personInfo').append('<div style="text-align:right; margin-right:40%" id="'+divId+'" ></div>');
           $('#'+divId).append('<h4 style="text-align:left; margin-left:20px">'+numberList[i]+' person:<h4>');
-          // $('#'+divId).append('<label for="'+divNameId+'">Name:</label>');
-          // $('#'+divId).append('<input style="width:150px" type="text" id="'+divNameId+'">');
           $('#'+divId).append('<label for="'+divAgeId+'">Age:</label>');
           $('#'+divId).append('<input type="range" min="1" max="120" value="50" class="slider" style="width:150px" type="text" id="'+divAgeId+'"><p style="margin-top:-20px; margin-left:290px;"><span id="'+divAgeValue+'"></span></p>');
           $('#'+divId).append('<br><label for="'+divOccupId+'">Occupation:</label>');
@@ -233,13 +211,11 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
         }
         $('#submitPersonalInfo').unbind('click').bind('click', function (e){
           $('#workplace').empty();
-          console.log('clickPersonalSubmit')
+          console.log('clickPersonalSubmit');
 
           for(var i=0;i<householdInfo.totalMembers;i++){
-            // var divNameId = i+'personName';
             var divAgeId = i+'personAge';
             var divOccupId = i+'personOccup';
-            // personList[i].name = ($('#'+divNameId).val());
             personList[i].age = ($('#'+divAgeId).val());
             console.log(personList[i].age);
             personList[i].occupation =($('#'+divOccupId).val());
@@ -250,18 +226,34 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
         });
     }
     function fillPlacePanel(){
-  
 
-       for(var i=0;i<personList.length;i++){
+        function showLocation(evt) {
+            activeWorkerOrStudent =Number(evt.target.id.split('_')[0]);
+            map.graphics.clear();
+            var point = evt.result.feature.geometry;
+            var symbol = new SimpleMarkerSymbol().setStyle(
+                SimpleMarkerSymbol.STYLE_SQUARE).setColor(
+                new Color([255,0,0,0.5])
+            );
+            var graphic = new Graphic(point, symbol);
+            map.graphics.add(graphic);
+            var found= false;
+            for(var c in travelZoneLayer._graphicsVal){
+                if(travelZoneLayer._graphicsVal[c].geometry.contains(point)){
+                    personList[activeWorkerOrStudent].address = [travelZoneLayer._graphicsVal[c].attributes.TAZ_New,point];
+                    found = true;
+                    break;
+                }
+            }
+        }
+        for(var i=0;i<personList.length;i++){
           if(personList[i].occupation!=='other'){
               var divId = i+'workInfo';
               var divGeocoder = i+'_'+restartTime+'workerAddressGeocoder';
-              console.log(divGeocoder)
-
               var divMapButton = i+'workerAddressMap';
               var divMapButtonDisable = i+'workerAddressMapDisable';
               var divTravelMethod = i+'workerTravelMethod';
-              console.log($('#workplace'))
+
               $('#workplace').append('<div style="text-align:left; margin-left:20px;" id="'+divId+'" ></div>');
               $('#'+divId).append("<h4 style='text-align:left'>"+numberList[i]+" person:<h4>");
               $('#'+divId).append("<p>Occupation Address:</p>");
@@ -298,13 +290,10 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
                     );
                     var graphic = new Graphic(evt.mapPoint, symbol);                        
                     map.graphics.add(graphic); 
-                    // if(typeof(evt.graphic.attributes.TAZ_New)!=='undefined'){
-                    //   console.log($('#checkTrue_'+activeWorkerOrStudent))
-                    //   $('#checkTrue_'+activeWorkerOrStudent).css('visibility','visible')
-                    // }
+
                 }
 
-              })
+              });
 
               $("#"+divMapButtonDisable).unbind('click').bind('click', function (e){
                 activeWorkerOrStudent =Number(this.id.split('worker')[0]);
@@ -355,10 +344,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
               if(personList[j].travelMethod === 'any'){
                   var  minimumTime= Infinity;
                   var bestMethod = null;
-                  var byTransitAutoWalkArray =  [csvData.transit.dataMatrix[allZones[i]], csvData.auto.dataMatrix[allZones[i]], csvData.walk.dataMatrix[allZones[i]]];
-              
-                  //var byTransitAutoWalk = [csvData.transit.dataMatrix[allZones[i]][personList[j].address[0]]||Infinity, csvData.auto.dataMatrix[allZones[i]][personList[j].address[0]]||Infinity, csvData.walk.dataMatrix[allZones[i]][personList[j].address[0]]||Infinity];
-                  //if transit
+
                   var dataArray =  csvData.transit.dataMatrix[allZones[i]];
                   if(dataArray){
                     if(dataArray[personList[j].address[0]]<minimumTime){
@@ -415,31 +401,18 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
 
       //legend. If you want to change legend scale or legend color, this part of code needs to be modified
       renderer.addBreak(0, 10, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([255, 255, 255,0.90])));
-      // renderer.addBreak(10, 50, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([	249, 238, 237,0.90])));
       renderer.addBreak(10, 50, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([243, 224, 219,0.90])));
-      // renderer.addBreak(100, sort[4*chunkZones], new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([237, 214, 202,0.90])));
       renderer.addBreak(50, 150, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([225, 200, 170,0.90])));
-      // renderer.addBreak( sort[5*chunkZones],  sort[6*chunkZones], new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([213, 196, 141,0.90])));
       renderer.addBreak(150,250, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([207, 197, 127,0.90])));
-      // renderer.addBreak(150,250, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([201, 199, 113,0.90])));
       renderer.addBreak(250,350, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([185, 195, 101,0.90])));
-      // renderer.addBreak(sort[9*chunkZones], sort[10*chunkZones], new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([168, 189, 88,0.90])));
       renderer.addBreak(350,450, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([149, 183, 77,0.90])));
-      // renderer.addBreak(sort[11*chunkZones], sort[12*chunkZones], new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([129, 177, 66,0.90])));
       renderer.addBreak(450,550, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([109, 171, 55,0.90])));
-      // renderer.addBreak(sort[13*chunkZones], sort[14*chunkZones], new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([87, 165, 45,0.90])));
       renderer.addBreak(550,750, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([	66, 159, 36,0.90])));
-      // renderer.addBreak(sort[15*chunkZones], sort[16*chunkZones], new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([44, 153, 27,0.90])));  
       renderer.addBreak(750,1000, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([	37, 121, 24,0.90])));
-      // renderer.addBreak(sort[17*chunkZones], sort[18*chunkZones], new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([11, 106, 18,0.90])));
       renderer.addBreak(1000, Infinity, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([5, 80, 15,0.90])));
       travelZoneLayer.setRenderer(renderer);
       travelZoneLayer.redraw();    
       var infoTemplate = new InfoTemplate();
-      // infoTemplate.setTitle('Travel Time Result');
-      // // infoTemplate.setContent('<p>'+numberList[i]+' person address.')
-      // 
-      // var infoTemplate = generateInfoTemplate();
       
       travelZoneLayer.setInfoTemplate(infoTemplate);
     }
@@ -484,6 +457,8 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
         }  
       }
     }
+    //restart the whole the application
+    //so we need to reinitialize everything
     $('#submitRestart').unbind('click').bind('click', function (e){
       restartTime=1+restartTime;
       $('#resultColumn').hide();
@@ -494,13 +469,11 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       personList = null;
       dojo.forEach(connections,dojo.disconnect);
       travelZoneLayer.setInfoTemplate(false)
-      
-      
     });
     
 });
 
-// }
+//sort an object by value
 function keySortObject(object){
   return Object.keys(object).sort(function(a,b){return object[a]-object[b]});
 }
@@ -511,16 +484,13 @@ function buildMatrixLookup(arr) {
   var verbal = index[0];
   for(var i =0; i<arr.length;i++){
     var k = arr[i][verbal];
-  
     delete arr[i][verbal];
-  
     lookup[parseInt(k)] = Object.keys(arr[i]).reduce((obj, key) => (obj[parseInt(key)] = Number(arr[i][key]),obj), {});
   }
-
   return lookup;
 }
+//check whether it is a number
 function checkNumber(n){
-
   if(isNaN(n)){
     return false;
   }
@@ -532,6 +502,7 @@ function checkNumber(n){
   }
   return true;
 }
+//this variable's onchange function will be called when the variable's value is changed
 function Variable(initVal, onChange)
 {
     this.val = initVal;          //Value to be stored in this object

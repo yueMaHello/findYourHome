@@ -1,11 +1,8 @@
+//a seperate thread
 var i = 0;
 importScripts('https://d3js.org/d3.v4.min.js');
+//if you changed the csv files' titles, you need to change code in this variable
 var csvData = {
-  // distance:{
-  //   directory:"../data/Distance_mf2.csv",
-  //   dataMatrix:null,
-  //   type:'distance'
-  // },
   auto:{
     directory:"../data/SOV_AUTO_Time_AM_Cr_mf1.csv",
     dataMatrix:null,
@@ -22,26 +19,19 @@ var csvData = {
     type:'walk'
   }
 };
+//loadData using D3
 function loadData() {
     var q = d3.queue();
-    // 
-    // q.defer(d3.csv,csvData.distance.directory)
-    //   .defer(d3.csv,csvData.auto.directory)
-    //     .defer(d3.csv,csvData.transit.directory)
-    //       .defer(d3.csv,csvData.walk.directory)
-    //       .await(finishReading);
     q.defer(d3.csv,csvData.auto.directory)
       .defer(d3.csv,csvData.transit.directory)
         .defer(d3.csv,csvData.walk.directory)
           .await(finishReading);
 }
+//convert csv matrices into desired Json format.
 function finishReading(error,auto,transit,walk){
-
   csvData.auto.dataMatrix=buildMatrixLookup(auto);
   csvData.transit.dataMatrix=buildMatrixLookup(transit);
   csvData.walk.dataMatrix=buildMatrixLookup(walk);
-
-
   postMessage(JSON.stringify(csvData));
   
 }
