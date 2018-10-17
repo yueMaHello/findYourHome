@@ -5,8 +5,8 @@ This app is an unfinished one, since it only takes travel time into account. We 
 For now, the app can collect each family member’s diurnal locations and travel methods, then it will brush show a gravity map to intuitively tell people where is suitable to live.
 In the future, house price, house type and preferred location will be taken into account to make the app more usable.
 
-During my four months full time research job in my university when I was a second year student, I participated a control process fault detection project.
-I did literature reviews, tested chemical system model, built control system using Simulink, and wrote python code of Dynamic PCA. Though the work I did is not hard,
+
+
 
 
  */
@@ -56,7 +56,6 @@ var csvData = {
     type:'walk'
   }
 };
-
     //detect when the data has been loaded.
   var monitorDataStatus = new Variable(0,function(){
     $('#wait').hide();
