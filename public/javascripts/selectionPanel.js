@@ -5,11 +5,7 @@ This app is an unfinished one, since it only takes travel time into account. We 
 For now, the app can collect each family member’s diurnal locations and travel methods, then it will brush show a gravity map to intuitively tell people where is suitable to live.
 In the future, house price, house type and preferred location will be taken into account to make the app more usable.
 
-
-
-
-
- */
+*/
 
 //record the restart times
 var submitTime = 0;
@@ -221,6 +217,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
           }
           $('#personColumn').hide();
           $('#placeColumn').show();
+          //show place panel after the user finish personalInfoPanel
           fillPlacePanel();
         });
     }
@@ -347,7 +344,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
                   var dataArray =  csvData.transit.dataMatrix[allZones[i]];
                   if(dataArray){
                     if(dataArray[personList[j].address[0]]<minimumTime){
-                      bestMethod = 'transit'
+                      bestMethod = 'transit';
                       minimumTime = dataArray[personList[j].address[0]];
                     }
                   }
@@ -365,10 +362,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
                       minimumTime = dataArray[personList[j].address[0]];
                     }
                   }
-                  
                   timeResult[allZones[i]]+=minimumTime;
-
-                
               }
               else{
                 var dataArray = csvData[personList[j].travelMethod].dataMatrix[allZones[i]];
