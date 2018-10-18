@@ -1,5 +1,8 @@
 # Find Your Home
-This is a Nodejs web application using Arcgis Javascript API. It will display a survey asking the user some questions. After collecting all the information, the app will show you where you should choose to build a home.
+
+When a family needs to move to a new city or wants to buy a new house, among thousands of houses, it is difficult to find which one is the most suitable. To decide a new accommodation’s location, several factors must take into account, such as daily travel time, house price, house type and so on. 
+
+This app is an unfinished one, since it only takes travel time into account. We will add more elements into it to optimize the selection algorithm in the future. For now, the app can collect each family member’s diurnal locations and travel methods, then it will show a gravity map to intuitively tell people where is suitable to live based on his information. 
 
 ## Set Up:
 #### From Github:
@@ -23,12 +26,16 @@ This is a Nodejs web application using Arcgis Javascript API. It will display a 
 2. Type 'npm start'
 2. Browse 'http://localhost:3035' or 'http://162.106.202.155:3035'
 
-## Use tips:
-#### Why there are several 'read***.js' scripts in './public/javascripts/' folder :
-1. To read these three csv files together may take a long time.
-2. The WebWorker is used to load each csv file in a seperate thread. 
-3. For example, readAuto.js is to read 'SOV_AUTO_TIME_AM_Cr_mf1.csv'
-4. When the user browse this App, the App will use three other threads to load CSV files parrallelly. It can save time.
+## Use Tips:
+#### Why there are a lot of HTML code inside the selectionPanel.js
+For example, if the user inputs '4' in the number of people, the app will generate four sections for personal information collection and address collection. If there is only 2 people in his home, the app will only generate two groups of other information.
+This is the reason that the App will add many html elements based on the answer of the user.
+
+#### The use of 'readData.js':
+1. To read these three csv files together may block the browser for a long time.
+2. The WebWorker is used to load each csv file in a seperate thread
+3. When the user opens this App, the App will use another thread to load CSV files parrallelly.
+4. Though there is a loading symbol shown in the web page, the user actually still can answer the questions. 
 
 #### If you want to update the TravelZoneLayer shape file:
  1. The map layer is not stored in localhost. It is stored in the arcgis online server.
