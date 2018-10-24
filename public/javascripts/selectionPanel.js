@@ -50,6 +50,11 @@ var csvData = {
     directory:"../data/Walk_Time_AM_Cr_mf486.csv",
     dataMatrix:null,
     type:'walk'
+  },
+  distance:{
+    directory:"../data/Distance_mf2.csv",
+    dataMatrix:null,
+    type:'distance'
   }
 };
     //detect when the data has been loaded.
@@ -78,13 +83,15 @@ else{
   q.defer(d3.csv,csvData.auto.directory)
       .defer(d3.csv,csvData.transit.directory)
         .defer(d3.csv,csvData.walk.directory)
-        .await(finishReadingWithoutWorker);
+            .defer(d3.csv,csvData.distance.directory)
+             .await(finishReadingWithoutWorker);
 }
 //run everything in the main thread
-function finishReadingWithoutWorker(error,auto,transit,walk){
+function finishReadingWithoutWorker(error,auto,transit,walk,distance){
   csvData.auto.dataMatrix=buildMatrixLookup(auto);
   csvData.transit.dataMatrix=buildMatrixLookup(transit);
   csvData.walk.dataMatrix=buildMatrixLookup(walk);
+  csvData.distance.dataMatrix=buildMatrixLookup(distance);
   $("#wait").hide();
 }
 
@@ -120,6 +127,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
     map.on('load',function(){
         map.addLayer(travelZoneLayer);
         map.addLayer(lrtFeatureLayer);
+        brushLayerWithSingleColor();
     });
     //first submit button
     $('#submitHouseholdInfo').unbind('click').bind('click', function (e){
@@ -146,7 +154,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
           $('#peopleNumber').css('border-color','red');
         }
         else{
-          $('#peopleNumber').css('border-color','green');
+          $('#peopleNumber').css('border-color','grey');
         }
         if(!checkNumber(householdInfo.numOfWorkers)){
           check=false;
@@ -155,7 +163,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
 
         }
         else{
-          $('#workerNumber').css('border-color','green');
+          $('#workerNumber').css('border-color','grey');
         }
         if(!checkNumber(householdInfo.numOfStudents)){
           check=false;
@@ -163,7 +171,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
           $('#studentNumber').css('border-color','red');
         }
         else{
-          $('#studentNumber').css('border-color','green');
+          $('#studentNumber').css('border-color','grey');
         }
         //if all the data has desired format.
         if(check){
@@ -276,7 +284,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
                 $('#'+activeDivGeocoder).hide();
                 $('#'+activeDivMapButtonDisable).show();
 
-                connections.push(dojo.connect(travelZoneLayer,'onClick',clickHandler))
+                connections.push(dojo.connect(travelZoneLayer,'onClick',clickHandler));
                 function clickHandler(evt){
                     map.graphics.clear();
                     personList[activeWorkerOrStudent].address= [evt.graphic.attributes.TAZ_New,evt.mapPoint];
@@ -292,8 +300,9 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
               });
 
               $("#"+divMapButtonDisable).unbind('click').bind('click', function (e){
+                  console.log(1)
                 activeWorkerOrStudent =Number(this.id.split('worker')[0]);
-                var activeDivGeocoder =  activeWorkerOrStudent+'_'+restartTime+'workerAddressGeocoder'+restartTime;
+                var activeDivGeocoder =  activeWorkerOrStudent+'_'+restartTime+'workerAddressGeocoder';
                 var activeDivMapButtonDisable = activeWorkerOrStudent+'workerAddressMapDisable';
                 $('#'+activeDivGeocoder).show();
                 $('#'+activeDivMapButtonDisable).hide();
@@ -328,15 +337,16 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       $('#resultColumn').show();
     });
     function analyzeTheBestHome(){
-
       var allZones = Object.keys(csvData.auto.dataMatrix);
       //console.log(allZones);
       var timeResult={};
       for(var i=0;i<allZones.length;i++){
         timeResult[allZones[i]]=0;
+        var hasValidPerson = false;
         for(var j=0;j<personList.length;j++){
           if(personList[j].address || personList[j].address!==null){
               //if any travel method, find the shortest one.
+              hasValidPerson = true;
               if(personList[j].travelMethod === 'any'){
                   var  minimumTime= Infinity;
                   var bestMethod = null;
@@ -378,20 +388,28 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
           }
         }  
       }
+      //sort time timeResult based on its value
+      //only the key will be preserved
       timeResult = keySortObject(timeResult);
-      brushLayer(timeResult);
-      showResult();
-      
+      if(hasValidPerson){
+         brushLayer(timeResult);
+      }
+      else{
+          brushLayerWithSingleColor();
 
+      }
+
+
+      showResult();
     }
     function brushLayer(timeResult){
-      var renderer = new ClassBreaksRenderer(symbol, function(feature){
+        var symbol = new SimpleFillSymbol();
+
+        var renderer = new ClassBreaksRenderer(symbol, function(feature){
                     // console.log(feature.attributes.TAZ_New)
           return timeResult.indexOf(feature.attributes.TAZ_New.toString());  
 
-      });
-      var symbol = new SimpleFillSymbol(); 
-
+        });
       //legend. If you want to change legend scale or legend color, this part of code needs to be modified
       renderer.addBreak(0, 10, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([255, 255, 255,0.90])));
       renderer.addBreak(10, 50, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([243, 224, 219,0.90])));
@@ -409,6 +427,24 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       
       travelZoneLayer.setInfoTemplate(infoTemplate);
     }
+    //brush the map with single color for initialization purpose and restarting purpose
+    function brushLayerWithSingleColor(){
+        var symbol = new SimpleFillSymbol();
+
+        var renderer = new ClassBreaksRenderer(symbol, function(feature){
+            // console.log(feature.attributes.TAZ_New)
+            return 1
+
+        });
+        //legend. If you want to change legend scale or legend color, this part of code needs to be modified
+        renderer.addBreak(0, 2, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([255, 255, 255,0.90])));
+        travelZoneLayer.setRenderer(renderer);
+        travelZoneLayer.redraw();
+        var infoTemplate = new InfoTemplate();
+
+        travelZoneLayer.setInfoTemplate(infoTemplate);
+    }
+
     function showResult(){
       connections.push(dojo.connect(travelZoneLayer,'onClick', selectZoneHandler));
       function selectZoneHandler(evt){
@@ -424,16 +460,16 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
             var bestMethod;
             var shortestTime=Infinity;
             for(var j in csvData){
-                if(csvData[j].dataMatrix[clickedZone][personZone]<shortestTime){
+                if(j!='distance' && csvData[j].dataMatrix[clickedZone][personZone]<shortestTime){
                   shortestTime = csvData[j].dataMatrix[clickedZone][personZone];
                   bestMethod = csvData[j].type;
                 }
             }
-            personList[i].travelResult = [bestMethod,shortestTime];
+            personList[i].travelResult = [bestMethod,shortestTime,csvData.distance.dataMatrix[clickedZone][personZone]];
           }
           else{
             
-            personList[i].travelResult  = [personMethod,csvData[personMethod].dataMatrix[clickedZone][personZone]];
+            personList[i].travelResult  = [personMethod,csvData[personMethod].dataMatrix[clickedZone][personZone],csvData.distance.dataMatrix[clickedZone][personZone]];
           }
         }
         
@@ -442,9 +478,11 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
           if(personList[p].travelResult===null){
             continue;
           }
-          $('#morningTravelTime').append('<h4 style="text-align:left; margin-left:25px">'+numberList[p]+' person: </h4>')
+          //show result on result panel
+          $('#morningTravelTime').append('<h4 style="text-align:left; margin-left:25px">'+numberList[p]+' person: </h4>');
           $('#morningTravelTime').append('<p style="text-align:left; margin-left:20%">Travel Method: '+personList[p].travelResult[0]+'</p>');
-          $('#morningTravelTime').append('<p style="text-align:left; margin-left:20%">Daily Travel Time: '+2*personList[p].travelResult[1].toFixed(2)+' mins</p>');
+          $('#morningTravelTime').append('<p style="text-align:left; margin-left:20%">Morning Travel Time: '+personList[p].travelResult[1].toFixed(2)+' mins</p>');
+          $('#morningTravelTime').append('<p style="text-align:left; margin-left:20%">Morning Travel Distance: '+personList[p].travelResult[2].toFixed(2)+' km</p>');
 
           
         }  
@@ -453,6 +491,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
     //restart the whole the application
     //so we need to reinitialize everything
     $('#submitRestart').unbind('click').bind('click', function (e){
+      map.graphics.clear();
       restartTime=1+restartTime;
       $('#resultColumn').hide();
       $('#householdColumn').show();
@@ -460,6 +499,15 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       $('#workplace').empty();
       $('#morningTravelTime').empty();
       personList = null;
+
+        //clean household panel values
+      $('#peopleNumber').val('');
+      $('#studentNumber').val('');
+      $('#workerNumber').val('');
+      $('#max-price').val('');
+      $('#min-price').val('');
+      brushLayerWithSingleColor();
+      //remove all 'onclick' event on layers or symbols
       dojo.forEach(connections,dojo.disconnect);
       travelZoneLayer.setInfoTemplate(false)
     });
@@ -509,5 +557,5 @@ function Variable(initVal, onChange)
         if(value === 3){
             this.onChange();
         }
-      };
+    };
 }

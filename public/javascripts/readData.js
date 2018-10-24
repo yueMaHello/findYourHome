@@ -17,6 +17,12 @@ var csvData = {
     directory:"../data/Walk_Time_AM_Cr_mf486.csv",
     dataMatrix:null,
     type:'walk'
+  },
+
+  distance:{
+      directory:"../data/Distance_mf2.csv",
+      dataMatrix:null,
+      type:'distance'
   }
 };
 //loadData using D3
@@ -25,13 +31,15 @@ function loadData() {
     q.defer(d3.csv,csvData.auto.directory)
       .defer(d3.csv,csvData.transit.directory)
         .defer(d3.csv,csvData.walk.directory)
-          .await(finishReading);
+          .defer(d3.csv,csvData.distance.directory)
+            .await(finishReading);
 }
 //convert csv matrices into desired Json format.
-function finishReading(error,auto,transit,walk){
+function finishReading(error,auto,transit,walk,distance){
   csvData.auto.dataMatrix=buildMatrixLookup(auto);
   csvData.transit.dataMatrix=buildMatrixLookup(transit);
   csvData.walk.dataMatrix=buildMatrixLookup(walk);
+  csvData.distance.dataMatrix=buildMatrixLookup(distance);
   postMessage(JSON.stringify(csvData));
   
 }
