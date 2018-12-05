@@ -7,7 +7,7 @@ In the future, house price, house type and preferred location will be taken into
 
 */
 
-//record the restart times
+//record the restart times, if the user click 'restart', then this submitTime will increase
 var submitTime = 0;
 var map;
 var personList;
@@ -190,14 +190,14 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
           var divOccupId = i+'personOccup';
     
           $('#personInfo').append('<div style="text-align:right; margin-right:40%" id="'+divId+'" ></div>');
-          $('#'+divId).append('<h4 style="text-align:left; margin-left:20px">'+numberList[i]+' person:<h4>');
-          $('#'+divId).append('<label for="'+divAgeId+'">Age:</label>');
-          $('#'+divId).append('<input type="range" min="1" max="120" value="50" class="slider" style="width:150px" type="text" id="'+divAgeId+'"><p style="margin-top:-20px; margin-left:290px;"><span id="'+divAgeValue+'"></span></p>');
-          $('#'+divId).append('<br><label for="'+divOccupId+'">Occupation:</label>');
-          $('#'+divId).append('<select style="width:150px" autocomplete="off" id="'+divOccupId+'"></select>');
-          $('#'+divOccupId).append('<option value="other" selected>Other</option>');
-          $('#'+divOccupId).append('<option value="employee">Employee at Edmonton</option>');
-          $('#'+divOccupId).append('<option value="student">Student at Edmonton</option><br>');
+          $('#'+divId).append('<h4 style="text-align:left; margin-left:20px">'+numberList[i]+' person:<h4>')
+              .append('<label for="'+divAgeId+'">Age:</label>')
+              .append('<input type="range" min="1" max="120" value="50" class="slider" style="width:150px" type="text" id="'+divAgeId+'"><p style="margin-top:-20px; margin-left:290px;"><span id="'+divAgeValue+'"></span></p>')
+              .append('<br><label for="'+divOccupId+'">Occupation:</label>')
+              .append('<select style="width:150px" autocomplete="off" id="'+divOccupId+'"></select>');
+          $('#'+divOccupId).append('<option value="other" selected>Other</option>')
+              .append('<option value="employee">Employee at Edmonton</option>')
+              .append('<option value="student">Student at Edmonton</option><br>');
           
           var slider = document.getElementById(divAgeId);
           var output = document.getElementById(divAgeValue);
@@ -229,6 +229,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
           fillPlacePanel();
         });
     }
+    //generate place panel
     function fillPlacePanel(){
 
         function showLocation(evt) {
@@ -250,7 +251,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
                 }
             }
         }
-        for(var i=0;i<personList.length;i++){
+        for(let i=0;i<personList.length;i++){
           if(personList[i].occupation!=='other'){
               var divId = i+'workInfo';
               var divGeocoder = i+'_'+restartTime+'workerAddressGeocoder';
@@ -259,16 +260,16 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
               var divTravelMethod = i+'workerTravelMethod';
 
               $('#workplace').append('<div style="text-align:left; margin-left:20px;" id="'+divId+'" ></div>');
-              $('#'+divId).append("<h4 style='text-align:left'>"+numberList[i]+" person:<h4>");
-              $('#'+divId).append("<p>Occupation Address:</p>");
-              $('#'+divId).append('<div style="position:absolute;margin-left:140px;margin-top:-35px;text-align:left;"><div type="text" id = "'+divGeocoder+'"><button style="cursor: pointer;text-align:left;position:absolute;margin-left:230px;margin-top:-25px;border-style:solid;border-size:1px;" id = "'+divMapButton+'">Or&nbspchoose&nbspon&nbspmap</button></div></div>');
-              $('#'+divId).append('<button style="position:absolute;margin-left:140px;margin-top:-35px;display:none; cursor: pointer;border-style:solid;border-size:1px;" id = "'+divMapButtonDisable+'">Or input the address</button>');
-              $('#'+divId).append('<label for="'+divTravelMethod+'">Ideal Travel Method:&nbsp</label>');
-              $('#'+divId).append('<select style="width:150px" autocomplete="off" id="'+divTravelMethod+'"></select>');
-              $('#'+divTravelMethod).append('<option value="any" selected>Any</option>');
-              $('#'+divTravelMethod).append('<option value="transit">Public Transit</option>');
-              $('#'+divTravelMethod).append('<option value="auto">Car</option>');
-              $('#'+divTravelMethod).append('<option value="walk">Walk</option>');
+              $('#'+divId).append("<h4 style='text-align:left'>"+numberList[i]+" person:<h4>")
+                  .append("<p>Occupation Address:</p>")
+                  .append('<div style="position:absolute;margin-left:140px;margin-top:-35px;text-align:left;"><div type="text" id = "'+divGeocoder+'"><button style="cursor: pointer;text-align:left;position:absolute;margin-left:230px;margin-top:-25px;border-style:solid;border-size:1px;" id = "'+divMapButton+'">Or&nbspchoose&nbspon&nbspmap</button></div></div>')
+                  .append('<button style="position:absolute;margin-left:140px;margin-top:-35px;display:none; cursor: pointer;border-style:solid;border-size:1px;" id = "'+divMapButtonDisable+'">Or input the address</button>')
+                  .append('<label for="'+divTravelMethod+'">Ideal Travel Method:&nbsp</label>')
+                  .append('<select style="width:150px" autocomplete="off" id="'+divTravelMethod+'"></select>');
+              $('#'+divTravelMethod).append('<option value="any" selected>Any</option>')
+                  .append('<option value="transit">Public Transit</option>')
+                  .append('<option value="auto">Car</option>')
+                  .append('<option value="walk">Walk</option>');
               var geocoder =  new Geocoder({
                 arcgisGeocoder: {
                   placeholder: "Find a place"
@@ -279,6 +280,9 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
               geocoder.on("select", showLocation);
               $('#'+divMapButton).unbind('click').bind('click', function (e){
                 activeWorkerOrStudent =Number(this.id.split('worker')[0]);
+                console.log(activeWorkerOrStudent)
+                  console.log(11111)
+
                 var activeDivGeocoder = activeWorkerOrStudent+'_'+restartTime+'workerAddressGeocoder';
                 var activeDivMapButtonDisable = activeWorkerOrStudent+'workerAddressMapDisable';
                 $('#'+activeDivGeocoder).hide();
@@ -300,7 +304,6 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
               });
 
               $("#"+divMapButtonDisable).unbind('click').bind('click', function (e){
-                  console.log(1)
                 activeWorkerOrStudent =Number(this.id.split('worker')[0]);
                 var activeDivGeocoder =  activeWorkerOrStudent+'_'+restartTime+'workerAddressGeocoder';
                 var activeDivMapButtonDisable = activeWorkerOrStudent+'workerAddressMapDisable';
@@ -317,7 +320,6 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       for(var i =0;i<personList.length;i++){
         var divTransitMethod = i+'workerTravelMethod';
         personList[i].travelMethod = $('#'+divTransitMethod).val();
-    
         if(personList[i].address || personList[i].address!==null){
           var infoTemplate = new InfoTemplate();
           infoTemplate.setTitle('Occupation Address');
@@ -338,7 +340,6 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
     });
     function analyzeTheBestHome(){
       var allZones = Object.keys(csvData.auto.dataMatrix);
-      //console.log(allZones);
       var timeResult={};
       for(var i=0;i<allZones.length;i++){
         timeResult[allZones[i]]=0;
@@ -378,7 +379,6 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
                 var dataArray = csvData[personList[j].travelMethod].dataMatrix[allZones[i]];
                 if(dataArray){
                   timeResult[allZones[i]]+=dataArray[personList[j].address[0]];
-
                 }
                 else{
                   timeResult[allZones[i]]+=Infinity;
@@ -396,52 +396,43 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       }
       else{
           brushLayerWithSingleColor();
-
       }
-
-
       showResult();
     }
     function brushLayer(timeResult){
         var symbol = new SimpleFillSymbol();
-
         var renderer = new ClassBreaksRenderer(symbol, function(feature){
                     // console.log(feature.attributes.TAZ_New)
           return timeResult.indexOf(feature.attributes.TAZ_New.toString());  
 
         });
       //legend. If you want to change legend scale or legend color, this part of code needs to be modified
-      renderer.addBreak(0, 10, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([255, 255, 255,0.90])));
-      renderer.addBreak(10, 50, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([243, 224, 219,0.90])));
-      renderer.addBreak(50, 150, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([225, 200, 170,0.90])));
-      renderer.addBreak(150,250, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([207, 197, 127,0.90])));
-      renderer.addBreak(250,350, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([185, 195, 101,0.90])));
-      renderer.addBreak(350,450, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([149, 183, 77,0.90])));
-      renderer.addBreak(450,550, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([109, 171, 55,0.90])));
-      renderer.addBreak(550,750, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([	66, 159, 36,0.90])));
-      renderer.addBreak(750,1000, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([	37, 121, 24,0.90])));
-      renderer.addBreak(1000, Infinity, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([5, 80, 15,0.90])));
+      renderer.addBreak(0, 10, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([5, 80, 15,0.90])));
+      renderer.addBreak(10, 50, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([37, 121, 24,0.90])));
+      renderer.addBreak(50, 150, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([66, 159, 36,0.90])));
+      renderer.addBreak(150,250, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([109, 171, 55,0.90])));
+      renderer.addBreak(250,350, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([149, 183, 77,0.90])));
+      renderer.addBreak(350,450, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([185, 195, 101,0.90])));
+      renderer.addBreak(450,550, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([207, 197, 127,0.90])));
+      renderer.addBreak(550,750, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([225, 200, 170,0.90])));
+      renderer.addBreak(750,1000, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([243, 224, 219,0.90])));
+      renderer.addBreak(1000, Infinity, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([255, 255, 255,0.90])));
       travelZoneLayer.setRenderer(renderer);
       travelZoneLayer.redraw();    
       var infoTemplate = new InfoTemplate();
-      
       travelZoneLayer.setInfoTemplate(infoTemplate);
     }
     //brush the map with single color for initialization purpose and restarting purpose
     function brushLayerWithSingleColor(){
         var symbol = new SimpleFillSymbol();
-
         var renderer = new ClassBreaksRenderer(symbol, function(feature){
-            // console.log(feature.attributes.TAZ_New)
             return 1
-
         });
         //legend. If you want to change legend scale or legend color, this part of code needs to be modified
-        renderer.addBreak(0, 2, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([255, 255, 255,0.90])));
+        renderer.addBreak(0, 2, new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,new Color([0,0,0,0.1]),1)).setColor(new Color([255, 255, 255,0.60])));
         travelZoneLayer.setRenderer(renderer);
         travelZoneLayer.redraw();
         var infoTemplate = new InfoTemplate();
-
         travelZoneLayer.setInfoTemplate(infoTemplate);
     }
 
@@ -468,23 +459,18 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
             personList[i].travelResult = [bestMethod,shortestTime,csvData.distance.dataMatrix[clickedZone][personZone]];
           }
           else{
-            
             personList[i].travelResult  = [personMethod,csvData[personMethod].dataMatrix[clickedZone][personZone],csvData.distance.dataMatrix[clickedZone][personZone]];
           }
         }
-        
         for(var p=0;p<personList.length;p++){
-
           if(personList[p].travelResult===null){
             continue;
           }
           //show result on result panel
-          $('#morningTravelTime').append('<h4 style="text-align:left; margin-left:25px">'+numberList[p]+' person: </h4>');
-          $('#morningTravelTime').append('<p style="text-align:left; margin-left:20%">Travel Method: '+personList[p].travelResult[0]+'</p>');
-          $('#morningTravelTime').append('<p style="text-align:left; margin-left:20%">Morning Travel Time: '+personList[p].travelResult[1].toFixed(2)+' mins</p>');
-          $('#morningTravelTime').append('<p style="text-align:left; margin-left:20%">Morning Travel Distance: '+personList[p].travelResult[2].toFixed(2)+' km</p>');
-
-          
+          $('#morningTravelTime').append('<h4 style="text-align:left; margin-left:25px">'+numberList[p]+' person: </h4>')
+              .append('<p style="text-align:left; margin-left:20%">Travel Method: '+personList[p].travelResult[0]+'</p>')
+              .append('<p style="text-align:left; margin-left:20%">Morning Travel Time: '+personList[p].travelResult[1].toFixed(2)+' mins</p>')
+              .append('<p style="text-align:left; margin-left:20%">Morning Travel Distance: '+personList[p].travelResult[2].toFixed(2)+' km</p>');
         }  
       }
     }
@@ -492,7 +478,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
     //so we need to reinitialize everything
     $('#submitRestart').unbind('click').bind('click', function (e){
       map.graphics.clear();
-      restartTime=1+restartTime;
+      restartTime+=1;
       $('#resultColumn').hide();
       $('#householdColumn').show();
       $('#personInfo').empty();
@@ -500,7 +486,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       $('#morningTravelTime').empty();
       personList = null;
 
-        //clean household panel values
+      //clean household panel values
       $('#peopleNumber').val('');
       $('#studentNumber').val('');
       $('#workerNumber').val('');
