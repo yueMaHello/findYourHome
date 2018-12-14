@@ -6,7 +6,8 @@ For now, the app can collect each family member’s diurnal locations and travel
 In the future, house price, house type and preferred location will be taken into account to make the app more usable.
 
 */
-
+//attribute.District. If you change the district layer's attribute name, this variable should be changed correspondingly
+let travelZoneAttributeID = 'TAZ_New';
 //record the restart times, if the user click 'restart', then this submitTime will increase
 var submitTime = 0;
 var map;
@@ -245,7 +246,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
             var found= false;
             for(var c in travelZoneLayer._graphicsVal){
                 if(travelZoneLayer._graphicsVal[c].geometry.contains(point)){
-                    personList[activeWorkerOrStudent].address = [travelZoneLayer._graphicsVal[c].attributes.TAZ_New,point];
+                    personList[activeWorkerOrStudent].address = [travelZoneLayer._graphicsVal[c].attributes[travelZoneAttributeID],point];
                     found = true;
                     break;
                 }
@@ -280,9 +281,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
               geocoder.on("select", showLocation);
               $('#'+divMapButton).unbind('click').bind('click', function (e){
                 activeWorkerOrStudent =Number(this.id.split('worker')[0]);
-                console.log(activeWorkerOrStudent)
-                  console.log(11111)
-
+                console.log(activeWorkerOrStudent);
                 var activeDivGeocoder = activeWorkerOrStudent+'_'+restartTime+'workerAddressGeocoder';
                 var activeDivMapButtonDisable = activeWorkerOrStudent+'workerAddressMapDisable';
                 $('#'+activeDivGeocoder).hide();
@@ -291,7 +290,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
                 connections.push(dojo.connect(travelZoneLayer,'onClick',clickHandler));
                 function clickHandler(evt){
                     map.graphics.clear();
-                    personList[activeWorkerOrStudent].address= [evt.graphic.attributes.TAZ_New,evt.mapPoint];
+                    personList[activeWorkerOrStudent].address= [evt.graphic.attributes[travelZoneAttributeID],evt.mapPoint];
                     var symbol = new SimpleMarkerSymbol().setStyle(
                       SimpleMarkerSymbol.STYLE_SQUARE).setColor(
                       new Color([255,0,0,0.5])
@@ -402,8 +401,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
     function brushLayer(timeResult){
         var symbol = new SimpleFillSymbol();
         var renderer = new ClassBreaksRenderer(symbol, function(feature){
-                    // console.log(feature.attributes.TAZ_New)
-          return timeResult.indexOf(feature.attributes.TAZ_New.toString());  
+          return timeResult.indexOf(feature.attributes[travelZoneAttributeID].toString());
 
         });
       //legend. If you want to change legend scale or legend color, this part of code needs to be modified
@@ -440,7 +438,7 @@ require(["dojo/_base/connect","esri/dijit/Geocoder", "esri/graphic","esri/geomet
       connections.push(dojo.connect(travelZoneLayer,'onClick', selectZoneHandler));
       function selectZoneHandler(evt){
         $('#morningTravelTime').empty();
-        var clickedZone = evt.graphic.attributes.TAZ_New;
+        var clickedZone = evt.graphic.attributes[travelZoneAttributeID];
         for(var i=0;i<personList.length;i++){
           if(personList[i].address===null){
             continue;
