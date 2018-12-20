@@ -24,7 +24,7 @@ This app is an unfinished one, since it only takes travel time into account. We 
 ## Run
 1. Use terminal/cmd to go to the root of the App './findYourHome2'. 
 2. Type 'npm start'
-2. Browse 'http://localhost:3035' or 'http://162.106.202.155:3035'
+2. Browse 'http://localhost:3035' 
 
 ## Use Tips:
 #### Why there are a lot of HTML code inside the selectionPanel.js
