@@ -6,7 +6,7 @@ For now, the app can collect each family member’s diurnal locations and travel
 In the future, house price, house type and preferred location will be taken into account to make the app more usable.
 
 */
-//attribute.District. If you change the district layer's attribute name, this variable should be changed correspondingly
+//If you change the travel zone layer's attribute name, this variable should be changed correspondingly
 let travelZoneAttributeID = 'TAZ_New';
 //record the restart times, if the user click 'restart', then this submitTime will increase
 var submitTime = 0;
